@@ -1,9 +1,12 @@
 
 from crypt import methods
 import logging
+from wsgiref import headers
 from flask import Flask, json, jsonify, request
 import bancopan_controller
 from db import create_tables, get_db
+from flask_oidc import OpenIDConnect
+import requests
 
 import settings
 import sys
@@ -19,13 +22,67 @@ log = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+# add config
+app.config.update({
+    'SECRET_KEY': 'SomethingNotEntirelySecret',
+    'TESTING': True,
+    'DEBUG': True,
+    'OIDC_CLIENT_SECRETS': 'client_secrets.json',
+    'OIDC_ID_TOKEN_COOKIE_SECURE': False,
+    'OIDC_REQUIRE_VERIFIED_EMAIL': False,
+    'OIDC_USER_INFO_ENABLED': True,
+    'OIDC_OPENID_REALM': 'demo',
+    'OIDC_SCOPES': ['openid', 'email', 'profile'],
+    'OIDC_INTROSPECTION_AUTH_METHOD': 'client_secret_post'
+})
+
+
+# keycloak
+oidc = OpenIDConnect(app)
 
 #Rotas
+@app.route('/')
+def hello_world():
+    if oidc.user_loggedin:
+        return ('Oi, %s, <a href="/private">See private</a> ' '<a href="/logout">Log out</a>' % oidc.user_getfield('preferred_username'))
+    else:
+        return 'Bem vido anonimo, <a href="/private">log in</a> '
 
-@app.route('/', methods=["GET"])
+
+@app.route('/hello', methods=["GET"])
 def get_home():
     texto = 'Hello World!'
     return jsonify(texto)
+
+# rota private
+@app.route('/private')
+@oidc.require_login
+def hello_me():
+    info = oidc.user_getinfo(['preferred_username', 'email', 'sub'])
+
+    username = info.get('preferred_username')
+    email = info.get('email')
+    user_id = info.get('sub')
+
+    if user_id in oidc.credentials_store:
+        try:
+            from oauth2client.client import OAuth2Credentials
+            access_token = OAuth2Credentials.from_json(oidc.credentials_store[user_id]).access_token
+            print('access_token=<%s>', access_token)
+            headers = {'Authorization': 'Bearer %s' % (access_token)}
+            # YOLO
+            greeting = requests.get('http://localhost:8080/greeting', headers=headers).text
+
+        except:
+            print("Could not access greeting-service")
+            greeting = "Olá %s" % username
+
+    return ("""%s seu email é %s e seu user_id é %s!
+    <ul>
+        <li><a href="/">Home</li>
+        <li><a href="//localhost:8080/auth/realms/demo/account?referrer=app&referrer_uri=http://localhost:5000/private&">Account</li>
+    </ul>
+    """ % (greeting, email, user_id))
 
 
 @app.route("/api/<id>", methods=["GET"])
@@ -69,12 +126,17 @@ def health():
         if conn:
             conn.close()
 
+# logout
+@app.route('/logout')
+def logout():
+    """ Removing the session cookie local."""
+    oidc.logout()
+    return 'Oi, voce foi deslogado! <a href="/">Retornar</a>'
+
+
 
 def configure_app(flask_app):
     flask_app.config['PREFERRED_URL_SCHEME'] = settings.PREFERRED_URL_SCHEME
-
-
-
 
 def main():
     create_tables()
