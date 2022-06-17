@@ -1,0 +1,15 @@
+
+CREATE TABLE IF NOT EXISTS conta (
+    id_conta INTERGER PRIMARY KEY AUTOINCREMENT,
+    cpf TEXT NOT NULL,
+    nome TEXT NOT NULL
+)
+
+CREATE TABLE IF NOT EXISTS movimentacoes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_conta INTEGER NOT NULL,
+    descricao TEXT NOT NULL,
+    valor TEXT NOT NULL,
+    data TEXT NOT NULL,
+    cd_tipo INTEGER NOT NULL
+)
