@@ -30,6 +30,6 @@ def get_by_cpf(cpf):
 def get_by_conta(id_conta):
     db = get_db()
     cursor = db.cursor()
-    statement = "SELECT id, id_conta, descricao, valor, data, cd_tipo FROM movimentacao WHERE id_conta = ?"
+    statement = "SELECT id, id_conta, descricao, valor, data, cd_tipo FROM movimentacoes WHERE id_conta = ?"
     cursor.execute(statement, [id_conta])
     return cursor.fetchone()
