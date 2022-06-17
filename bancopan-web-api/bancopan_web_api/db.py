@@ -9,7 +9,7 @@ def get_db():
 def create_tables():
     tables = [
         """CREATE TABLE IF NOT EXISTS conta (
-    id_conta INTERGER PRIMARY KEY AUTOINCREMENT,
+    id_conta INTEGER PRIMARY KEY AUTOINCREMENT,
     cpf TEXT NOT NULL,
     nome TEXT NOT NULL)
     """,
