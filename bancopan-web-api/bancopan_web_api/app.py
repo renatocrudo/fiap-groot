@@ -1,6 +1,8 @@
 
 import logging
 from flask import Flask, json, jsonify, request
+import bancopan_controller
+from db import create_tables
 
 import settings
 import sys
