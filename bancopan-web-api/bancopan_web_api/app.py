@@ -3,7 +3,7 @@ from crypt import methods
 import logging
 from flask import Flask, json, jsonify, request
 import bancopan_controller
-from db import create_tables
+from db import create_tables, get_db
 
 import settings
 import sys
@@ -53,6 +53,21 @@ def insert_movimentacao():
     cd_tipo = banco_details["cd_tipo"]
     resultado = bancopan_controller.insert_movimentacoes(id_conta, descricao, valor, data, cd_tipo)
     return jsonify(resultado)
+
+#health
+@app.route("/health")
+def health():
+    conn = None
+    try:
+        conn = get_db()
+        conn.execute('select 1')
+        return jsonify("Ok")
+    except Exception as e:
+        log.error(str(e))
+        return "Unable to connect to database.", 500
+    finally:
+        if conn:
+            conn.close()
 
 
 def configure_app(flask_app):
