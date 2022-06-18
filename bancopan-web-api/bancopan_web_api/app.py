@@ -24,7 +24,7 @@ app = Flask(__name__)
 
 # add config
 app.config.update({
-    'SECRET_KEY': 'SomethingNotEntirelySecret',
+    'SECRET_KEY': 'rHJwsJGM37teYdliqijAr9udXSXGxbus',
     'TESTING': True,
     'DEBUG': True,
     'OIDC_CLIENT_SECRETS': 'client_secrets.json',
@@ -33,7 +33,8 @@ app.config.update({
     'OIDC_USER_INFO_ENABLED': True,
     'OIDC_OPENID_REALM': 'demo',
     'OIDC_SCOPES': ['openid', 'email', 'profile'],
-    'OIDC_INTROSPECTION_AUTH_METHOD': 'client_secret_post'
+    'OIDC_INTROSPECTION_AUTH_METHOD': 'client_secret_post',
+    'OIDC_TOKEN_TYPE_HINT':'access_token'
 })
 
 
@@ -50,6 +51,7 @@ def hello_world():
 
 
 @app.route('/hello', methods=["GET"])
+@oidc.accept_token(require_token=True, scopes_required=['openid'])
 def get_home():
     texto = 'Hello World!'
     return jsonify(texto)
@@ -68,10 +70,12 @@ def hello_me():
         try:
             from oauth2client.client import OAuth2Credentials
             access_token = OAuth2Credentials.from_json(oidc.credentials_store[user_id]).access_token
-            print('access_token=<%s>', access_token)
+            print('access_token=<%s>' % (access_token))
             headers = {'Authorization': 'Bearer %s' % (access_token)}
             # YOLO
-            greeting = requests.get('http://localhost:8080/greeting', headers=headers).text
+            greeting = requests.get('http://localhost:5000/api/1', headers=headers).text
+            #print("Testando")
+            #print(greeting)
 
         except:
             print("Could not access greeting-service")
@@ -80,12 +84,13 @@ def hello_me():
     return ("""%s seu email é %s e seu user_id é %s!
     <ul>
         <li><a href="/">Home</li>
-        <li><a href="//localhost:8080/auth/realms/demo/account?referrer=app&referrer_uri=http://localhost:5000/private&">Account</li>
+        <li><a href="http://localhost:8080/auth/realms/demo/account?referrer=app&referrer_uri=http://localhost:5000/private&">Account</li>        
     </ul>
     """ % (greeting, email, user_id))
 
 
 @app.route("/api/<id>", methods=["GET"])
+@oidc.accept_token(require_token=True, scopes_required=['openid'])
 def get_movimentos_id_conta(id):
     resultado = bancopan_controller.get_by_conta(id)
     return jsonify(resultado)
