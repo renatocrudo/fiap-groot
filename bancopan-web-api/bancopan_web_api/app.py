@@ -7,6 +7,7 @@ import bancopan_controller
 from db import create_tables, get_db
 from flask_oidc import OpenIDConnect
 import requests
+import utils
 
 import settings
 import sys
@@ -93,7 +94,9 @@ def hello_me():
 @oidc.accept_token(require_token=True, scopes_required=['openid'])
 def get_movimentos_id_conta(id):
     resultado = bancopan_controller.get_by_conta(id)
-    return jsonify(resultado)
+    my_object = utils.list_for_json(['id', 'id_conta','descricao','valor','data','cd_tipo'], resultado)
+    print(my_object)
+    return jsonify(my_object)
 
 #Criando uma conta
 @app.route("/api", methods=["POST"])
@@ -138,7 +141,14 @@ def logout():
     oidc.logout()
     return 'Oi, voce foi deslogado! <a href="/">Retornar</a>'
 
-
+# Habilitando CORS
+@app.after_request
+def after_request(response):
+    response.headers["Access-Control-Allow-Origin"] = "*" # <- You can change "*" for a domain for example "http://localhost"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, PUT, DELETE"
+    response.headers["Access-Control-Allow-Headers"] = "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization"
+    return response
 
 def configure_app(flask_app):
     flask_app.config['PREFERRED_URL_SCHEME'] = settings.PREFERRED_URL_SCHEME
