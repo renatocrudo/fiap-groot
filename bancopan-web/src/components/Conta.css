@@ -1,0 +1,13 @@
+
+    .container{
+        background-color: '#FFF',
+    }
+    .valorReceita{
+        font-size: 22;
+        color: '#2ecc71'
+    }
+
+    .valorGastos {
+        font-size: 22;
+        color: '#e74c3c'
+    }
