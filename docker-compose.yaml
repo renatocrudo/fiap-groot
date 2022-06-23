@@ -1,0 +1,21 @@
+version: '3'
+services:
+  backend:
+    command:
+      - sh
+      - -c
+      - "python3 bancopan-web-api/bancopan_we_api/app.py"
+    ports:
+      - "8888:8888"
+    build:
+      context: bancopan-web-api
+      dockerfile: dockerfile
+    environment:
+      - FLASK_APP=bancopan-web-api/bancopan_we_api/app.py
+
+  frontend:
+    ports:
+      - "4200:4200"
+    build:
+      context: bancopan-web
+      dockerfile: dockerfile
